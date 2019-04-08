@@ -1,0 +1,19 @@
+in:
+  type: file
+  path_prefix: {{ env.source_filepath}}
+  parser:
+  {{ env.source_query }}
+
+filters:
+  - type: column
+    add_columns:
+      - {name: etl_date,type: string,default: {{ env.etl_date }} }
+
+out:
+  type: parquet
+  path_prefix: {{ env.hdfs_path }}
+  sequence_format: '%03d'
+  config_files:
+   - /opt/spark/conf/core-site.xml
+   - /opt/spark/conf/hdfs-site.xml
+  overwrite: true

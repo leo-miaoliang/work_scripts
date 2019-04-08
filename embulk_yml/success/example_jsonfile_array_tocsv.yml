@@ -1,0 +1,53 @@
+in:
+  type: file
+  path_prefix: "/opt/json/000001"
+  parser:
+    type: jsonl
+    # default_typecast: true # default: true
+    columns:
+      - {name: "id", type: "string"}
+      - {name: "data", type: "json"}
+      - {name: "mmac", type: "string"}
+      - {name: "rate", type: "long"}
+      - {name: "time", type: "string"}
+      - {name: "lat", type: "string"}
+      - {name: "lon", type: "string"}
+filters:
+  - type: expand_json_array
+    json_column_name: data
+    root: "$."
+    expanded_column_name: data1
+
+  - type: expand_json
+    json_column_name: data1
+    expanded_columns:
+      - { name: "mac",          type: string }
+      - { name: "rssi",         type: long }
+      - { name: "rssi1",        type: long }
+      - { name: "rssi2",        type: long }
+      - { name: "rssi3",        type: long }
+      - { name: "ts",           type: string }
+      - { name: "tmc",        type: string }
+      - { name: "router",        type: string }
+      - { name: "range",        type: double }
+  - type: column
+    add_columns:
+      - {name: etl_filepath,type: string,default: "/opt/json/000001"}
+    drop_columns:
+      - {name: data}
+  
+out:
+  type: file
+  path_prefix: /opt/json/tcsv_
+  file_ext: csv
+  formatter:
+    type: csv
+    delimiter: "\t"
+    newline: CRLF
+    newline_in_field: LF
+    charset: UTF-8
+    quote_policy: MINIMAL
+    quote: '"'
+    escape: "\\"
+    null_string: "\\N"
+    default_timezone: 'UTC'

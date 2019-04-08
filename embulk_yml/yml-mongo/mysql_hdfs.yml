@@ -1,0 +1,48 @@
+in:
+  type: mysql
+  host: 47.99.61.134
+  user: dev
+  password: devuuabc2018
+  database: bi
+  use_legacy_datetime_code: true
+  default_timezone: Asia/Shanghai  
+  query: |
+    select call_id,cle_name,cast(start_date as char(20)) as start_date,current_timestamp  as load_time,cast(current_date as char) as etl_date
+    from bi.est_cdr where cle_name<>'' limit 1000
+
+out:
+  type: hdfs
+  config_files:
+  - /opt/spark-2.3.2-bin-hadoop2.7/conf/core-site.xml
+  - /opt/spark-2.3.2-bin-hadoop2.7/conf/hdfs-site.xml
+  config:
+    fs.defaultFS: hdfs://hdfscluster
+    fs.hdfs.impl: org.apache.hadoop.hdfs.DistributedFileSystem
+    fs.file.impl: org.apache.hadoop.fs.LocalFileSystem
+  path_prefix: '/datahub/stg.db/leotest/etl_date=2018-11-10/'
+  file_ext: txt
+  overwrite: true
+
+#  encoders:
+#    - type: gzip
+#      level: 6
+
+  formatter:
+    type: csv
+    delimiter: "\u0007"
+#    delimiter: "|"x
+    header_line: false
+    newline: CRLF
+    newline_in_field: LF
+    charset: UTF-8
+    quote_policy: MINIMAL
+    quote: '"'
+    escape: "\\"
+    null_string: "\\N"
+    default_timezone: Asia/Shanghai
+
+#  formatter:
+#    type: avro
+##    codec: snappy
+#    avsc: /home/dw_adm/tmp/extract/conf/schema.avsc
+#    skip_error_record: true

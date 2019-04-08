@@ -1,0 +1,22 @@
+in:
+  type: mongodb
+  hosts:
+  - {host: 10.68.100.54, port: 27017}
+  database: mangguo_webhook
+  collection: "CallHistory"
+  query: '{dialogCount:0}'
+  projection: '{"mobile":1,"callChannel":1,"talkDate":1,"talk_timestamp":1}'
+
+filters:
+  # convert json column into typed columns
+  - type: expand_json
+    json_column_name: record
+    expanded_columns:
+      - {name: _id, type: string}
+      - {name: mobile, type: long}
+      - {name: callChannel, type: string}
+      - {name: talkDate, type: string}
+      - {name: talk_timestamp, type: long}
+
+out: 
+   type: stdout

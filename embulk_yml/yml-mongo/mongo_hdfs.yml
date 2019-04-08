@@ -1,0 +1,26 @@
+in:
+  type: mongodb
+  hosts:
+  - {host: 10.68.100.54, port: 27017}
+  database: mangguo_webhook
+  collection: "CallHistory"
+  query: '{dialogCount:0}'
+  projection: '{"mobile":1,"callChannel":1}'
+
+filters:
+  # convert json column into typed columns
+  - type: expand_json
+    json_column_name: record
+    expanded_columns:
+      - {name: _id, type: string}
+      - {name: mobile, type: long}
+      - {name: callChannel, type: string}
+
+out:
+  type: parquet
+  path_prefix: hdfs://hdfscluster/datahub/stg.db/test_mongo/etl_date=2018-11-22/
+  sequence_format: '%03d'
+  config_files:
+   - /opt/spark-2.3.2-bin-hadoop2.7/conf/core-site.xml
+   - /opt/spark-2.3.2-bin-hadoop2.7/conf/hdfs-site.xml
+  overwrite: true

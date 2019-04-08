@@ -1,0 +1,19 @@
+in:
+  type: parquet_hadoop
+  config_files:
+   - /opt/spark/conf/core-site.xml
+   - /opt/spark/conf/hdfs-site.xml
+  config:
+    parquet.read.bad.record.threshold: 0.01
+  path: hdfs://hdfscluster/datahub/ods.db/newuuabc_admin/*.parquet
+  parquet_log_level: WARNING
+
+out:
+  type: file
+  path_prefix: '/tmp/1_'
+  default_timezone: Asia/Shanghai
+  formatter:
+    type: jsonl
+    encoding: UTF-8
+  file_ext: 'json'
+  overwrite: true

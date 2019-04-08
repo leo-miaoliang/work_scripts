@@ -1,0 +1,43 @@
+in:
+  type: mongodb
+  hosts:
+  - {{ env.source_host }}
+  database: {{ env.source_db }}
+  collection: {{ env.source_table }}
+  projection: '{"mangguo":1}'
+
+
+filters:
+  - type: expand_json_array
+    json_column_name: record
+    root: "$.mangguo.call_item"
+    expanded_column_name: call_item
+
+  - type: expand_json
+    json_column_name: call_item
+    expanded_columns:
+      - {name: record_fpath, type: string}
+      - {name: who, type: string}
+      - {name: text, type: string}
+      - {name: create_at, type: string}
+      - {name: user_info, type: string}
+      - {name: flow_info, type: string}
+
+
+  - type: expand_json
+    json_column_name: record
+    expanded_columns:
+      - {name: _id, type: string}  
+
+
+
+out:
+  type: {{ env.hdfs_type }}
+  path_prefix:  {{ env.hdfs_path }}
+  sequence_format: '%03d'
+  default_timezone: Asia/Shanghai
+  default_timestamp_format: "%Y-%m-%d %H:%M:%S"
+  config_files:
+  - {{ env.hdfs_coresite }}
+  - {{ env.hdfs_site }}
+  overwrite: true

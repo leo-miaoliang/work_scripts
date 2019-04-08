@@ -1,0 +1,389 @@
+1. Centos 6 第三方依赖包 
+yum install chkconfig python bind-utils psmisc libxslt zlib sqlite cyrus-sasl-plain cyrus-sasl-gssapi fuse fuse-libs redhat-lsb -y
+
+修改/etc/sysconfig/network文件，在此只列举master机器的配置如下 ,/etc/rc.local添加相同命令
+
+NETWORKING=yes
+HOSTNAME=master
+reboot重启生效
+
+vi /etc/hosts    # host list
+
+echo never > /sys/kernel/mm/transparent_hugepage/defrag
+echo never > /sys/kernel/mm/transparent_hugepage/defrag
+
+修改swappiness参数有临时修改和永久修改两种方法：
+
+----临时修改：
+
+[root@rhce ~]# sysctl vm.swappiness=0
+vm.swappiness = 0
+[root@rhce ~]# cat /proc/sys/vm/swappiness
+10
+这里我们的修改已经生效，但是如果我们重启了系统，又会变成60.
+
+----永久修改：
+在/etc/sysctl.conf 文件里添加如下参数：
+vm.swappiness=0
+或者：
+[root@rhce ~]# echo 'vm.swappiness=0'>> /etc/sysctl.conf
+保存，重启，就生效了。
+
+2. 安装JDK(1.7 or above supported.
+a)）卸载自带java 
+rpm -qa |grep java 
+yum remove java*(删除自带的java) 
+b）安装jdk（每个节点rpm安装） 
+rpm -ivh jdk1.7.0_67.rpm
+
+！！！重点！！！ 
+JAVA安装后，CDH需要一个/usr/java/default的软链接，否则安装CM的过程中，会出现找不到JAVA_HOME的错误。 
+进入/usr/java目录：ln -s /opt/java/jdk1.7.0_67 default。
+
+之后，修改/etc/profile：
+
+export JAVA_HOME=/usr/java/jdk1.7.0_67-cloudera
+export PATH=$JAVA_HOME/bin:$PATH
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+
+启动：source /etc/profile
+
+
+3. 安装Mysql
+
+a) 检查之前是否安装过mysql，删除之前安装的mysql
+# rpm -qa | grep mysql
+mysql-libs-5.1.71-1.el6.x86_64
+# rpm -e mysql-libs-5.1.71-1.el6.x86_64 --nodeps
+# find / -name mysql
+# rm -rf …
+注意：卸载不了就强制卸载，--nodeps --force
+
+http://blog.csdn.net/shilonggang000/article/details/54617439
+
+　1.chomod 777  /tmp    需要修该/tmp的权限  
+
+　　2.rm -rf /var/lib/mysql 删除这个文件
+
+　　3.yum remove mysql*   卸载相关的mysql
+
+　　4.yum install mysql-server 重新安装
+
+　　5.service mysqld start  启动mysql服务
+
+　　6.mysql   输入mysql 进入
+
+service mysql start     #启动
+chkconfig mysql on  #设置开机启动
+
+命令rpm -ivh xxxxx进行安装，如果中间出现冲突，就先删除再装
+
+MYSQL启动后，默认其实己经生成了默认密码，密码保存在/root/.mysql_secret文件中，但是这个密码怪怪的，一般为了以后方便起见，都需要改一下，这里我改成123456，执行如下命令。
+
+# service mysql stop
+# mysqld_safe --user=mysql --skip-grant-tables --skip-networking&
+# mysql -u root mysql
+mysql> use mysql; 
+mysql> UPDATE user SET Password=PASSWORD('123456')where USER='root';
+mysql> FLUSH PRIVILEGES;
+mysql> quit
+# service mysql restart
+# mysql -u root –p
+Enter password: 123456
+mysql>SET PASSWORD=PASSWORD('123456'); （重置密码）
+mysql> use mysql; (此DB存放MySQL的各种配置信息)
+Database changed
+mysql> select host,user from user; (查看是否能够查询)
+
+mysqladmin -uroot password '新密码' #设置密码
+
+b) windows 访问设置
+GRANT ALL PRIVILEGES ON *.* TO '新用户'@'%' IDENTIFIED BY '新用户的密码' WITH GRANT OPTION; 
+FLUSH PRIVILEGES;
+
+4. SSH免密设置
+ssh-keygen -t  rsa   -P ''  -f ~/.ssh/id_rsa   #不提示直接生成密钥
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys 
+
+chmod 600 ~/.ssh/authorized_keys   #authorized_keys的访问权限
+chmod 600 ~/.ssh/
+
+5. Selinux关闭
+setenforce 0
+/etc/selinux/config 下的SELINUX=disabled
+
+
+
+6. Firewall关闭
+service iptables stop # (临时关闭)
+chkconfig iptables off #(重启后生效)
+
+7. 安装NTP
+yum install -y ntp     #安装时间同步服务
+chkconfig ntpd on   #开机启动
+chkconfig --list ntpd  #检查是否设置成功（2-5为on则表示成功）
+ntpdate -u ntpsjtu.edu.cn   #设置同步
+
+# ntpdate -u 202.120.2.101
+# date
+以下是国内常见的NTP服务器
+
+ntp.sjtu.edu.cn 202.120.2.101 上海交通大学网络中心
+s1a.time.edu.cn 北京邮电大学
+s1b.time.edu.cn 清华大学
+s1c.time.edu.cn 北京大学
+s1d.time.edu.cn 东南大学
+s1e.time.edu.cn 清华大学
+s2a.time.edu.cn 清华大学
+s2b.time.edu.cn 清华大学
+s2c.time.edu.cn 北京邮电大学
+s2d.time.edu.cn 西南地区网络中心
+s2e.time.edu.cn 西北地区网络中心
+s2f.time.edu.cn 东北地区网络中心
+s2g.time.edu.cn 华东南地区网络中心
+s2h.time.edu.cn 四川大学网络管理中心
+s2j.time.edu.cn 大连理工大学网络中心
+s2k.time.edu.cn CERNET桂林主节点
+s2m.time.edu.cn 北京大学
+
+打开master机器/etc/ntp.conf文件，其它地方可以注释，留下如下关键信息，保存退出。
+
+driftfile /var/lib/ntp/drift
+restrict 127.0.0.1
+restrict -6 ::1
+restrict default nomodify notrap
+server 127.127.1.0
+fudge 127.127.1.0 stratum 8
+includefile /etc/ntp/crypto/pw
+keys /etc/ntp/keys
+
+启动服务
+
+执行如下命令启动NTP服务，如果服务之前己启动，则重启服务。ntp与自身进行同步需要一小段时间，大约需要5分钟。
+
+service ntpd start
+chkconfig ntpd on
+1
+2
+使用命令ntpstat检查服务启动后自身是否同步完成，如出现以下信息则完成。
+
+synchronised to local net at stratum 9 
+time correct to within 12 ms
+polling server every 64 s
+1
+2
+3
+客户端同步
+
+好了，服务己启动，就差其它节点机器同步了，使用命令ntpdate 172.16.18.150查看结果，如出现以下信息则同步完成。 
+24 Feb 13:37:35 ntpdate[13675]: adjust time server 172.16.18.150 offset 0.068598 sec
+
+
+客户端同步（使用ntpd服务）
+也可以使用ntpdate手动同步，推荐使用ntpd服务进行自动同步。
+
+（1）修改/etc/ntp.conf，在里边插入：
+     server 192.168.20.91
+
+（2）使ntpd服务开启启动  
+
+     chkconfig ntpd on
+
+（3）启动客户端ntpd服务
+
+    /etc/rc.d/init.d/ntpd start
+
+7. 搭建本地yum源
+a) 阿里源  
+	1、备份
+	mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+	2、下载新的CentOS-Base.repo 到/etc/yum.repos.d/
+	CentOS 5
+	wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-5.repo
+	CentOS 6
+	wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-6.repo
+	CentOS 7
+	wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+	3、之后运行yum makecache生成缓存
+
+yum install yum-utils createrepo
+
+1：如果包是通过yum或者rpm方式安装
+[root@localhost yum.repos.d]# rpm -qa  //找出系统所有的包，找到对应的文件名
+ 
+[root@localhost yum.repos.d]# rpm -ql php-mysql-5.4.16-23.el7_0.3.x86_64
+/etc/php.d/mysql.ini
+/etc/php.d/mysqli.ini
+/etc/php.d/pdo_mysql.ini
+/usr/lib64/php/modules/mysql.so
+/usr/lib64/php/modules/mysqli.so
+/usr/lib64/php/modules/pdo_mysql.so
+ 
+2：如果是源码编译安装
+2.1源码安装的方式通过rpm命令是无法找出来的，如果你确定这个软件已经开启，则可以通过
+[root@localhost yum.repos.d]# ps -aux 找出对一个的可执行文件所在的目录
+2.2通常安装完包后，我们都会把他加入到服务里面，你可以去/etc/rc.d/下找相应的文件，进而确认相关信息。
+最后一种最笨的方法就是用find命令
+find / -name *文件名*
+
+yum clear all 
+yum update
+
+8. 查找已经安装的包
+rpm -qa | grep -i mysql  
+
+9.Mysql JAR包
+mkdir /usr/share/java
+cp /home/lenmom/mysql5.6.30/mysql-connector-java-5.1.40-bin.jar /usr/share/java/mysql-connector-java.jar
+
+
+
+Grant all privileges on *.* to 'root'@'%' identified by '' with grant option;  #（允许远程用户登录mysql）
+
+--hive数据库
+create database hive DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+grant all on hive.* TO 'hive'@'%' IDENTIFIED BY 'hive';
+--oozie数据库
+create database oozie DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+grant all on oozie.* TO 'oozie'@'%' IDENTIFIED BY 'oozie';
+--hue数据库
+create database hue DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+grant all on hue.* TO 'hue'@'%' IDENTIFIED BY 'hue';
+
+查看端口占用：
+netstat -anp|grep 80 
+lsof -i:端口号查看某个端口是否被占用 
+
+centos关机命令：
+1、halt 立马关机
+2、shutdown -h 10 1分钟后自动关机
+3、poweroff 立刻关机,并且电源也会断掉
+4、shutdown -h now 立刻关机(root用户使用)
+如果是通过shutdown命令设置关机的话，可以用shutdown -c命令取消重启
+
+修改swappiness
+
+# echo "vm.swappiness=0" >> /etc/sysctl.conf (永久生效)
+# echo 0 > /proc/sys/vm/swappiness (临时生效)
+# for a in {1..6}; do ssh enc-bigdata0$a echo "vm.swappiness=0" >> /etc/sysctl.conf; done
+
+
+19. Apache2安装
+yum install httpd     #安装apache2
+service httpd start    #启动apache服务
+chkconfig httpd on  #设置开机启动
+
+启动时如果出现错误httpd: Could not reliably determine the server's fully qualified domain name，解决方案：
+vi /etc/httpd/conf/httpd.conf
+将里面的 #ServerName localhost:80 注释去掉即可。
+加入一句  ServerName  localhost:80
+再执行 httpd
+然后可以通过浏览器访问 http://localhost:80 ，如果页面显示 “It works！” ，即表示apache已安装并启动成功。
+
+20. 安装Cloudera Manager
+a) mkdir /opt/cloudera-manager        #创建cloudera-manager，用于部署Manager
+b)  mv /home/lenmom/cdh5/cloudera-manager-el6-cm5.8.3_x86_64.tar.gz  /opt/cloudera-manager/         #复制文件到cloudera-manager目录
+c) cd  /opt/cloudera-manager/  #进入cloudera-manager目录
+d)  tar -xvzf cloudera-manager-el6-cm5.8.3_x86_64.tar.gz   #解压到本地
+e) useradd --system --home=/opt/cloudera-manager/cm-5.8.3/run/cloudera-scm-server --no-create-home --shell=/bin/false --comment "Cloudera SCM User" cloudera-scm  #add user cloudera-scm
+f) 修改/opt/cloudera-manager/cm-5.8.3/etc/cloudera-scm-agent/config.ini   server_host,server_port    #配置cm-agent 
+g) cm-server数据库 
+/opt/cloudera-manager/cm-5.8.3/share/cmf/schema/scm_prepare_database.sh mysql cm -hlocalhost -uroot  --scm-host localhost scm scm scm
+Note:
+usage: /opt/cloudera-manager/cm-5.8.3/share/cmf/schema/scm_prepare_database.sh [options] (postgresql|mysql|oracle) database username [password]
+
+Prepares a database (currently either MySQL, PostgreSQL or Oracle)
+for use by Cloudera Service Configuration Manager (SCM):
+o Creates a database (For PostgreSQL and MySQL only)
+o Grants access to that database, by:
+  - (PostgreSQL) Creating a role
+  - (MySQL) Creating a grant
+o Creates the SCM database configuration file.
+o Tests if the database connection parameters are valid.
+
+MANDATORY PARAMETERS
+database type: either "oracle", "postgresql" or "mysql"
+database: For PostgreSQL and MySQL, name of the SCM database to create.
+          For Oracle this is the SID of the Oracle database.
+username: Username for access to SCM's database.
+
+OPTIONAL PARAMETERS
+password: Password for the SCM user. If not provided, will
+          prompt for it.
+
+OPTIONS
+   -h|--host       Database host. Default is to connect locally.
+   -P|--port       Database port. If not specified, the database specific
+                   default will be used: namely, 3306 for MySQL,
+                   5432 for PostgreSQL, and 1521 for Oracle.
+   -u|--user       Database username that has privileges for creating
+                   users and grants.  The default is 'root'.
+                   Typical values are 'root' for MySQL and
+                   'postgres' for PostgreSQL. Not applicable for Oracle.
+   -p|--password   Database Password. Default is no password.
+   --scm-host      SCM server's hostname. Omit if SCM is colocated with MySQL.
+   --config-path   Path to SCM configuration files.
+                   Default is /etc/cloudera-scm-server.
+   -f|--force      Don't stop when an error is encountered.
+   -v|--verbose    Print more informational messages.
+   -?|--help       Show this message.
+
+NOTE ON POSTGRESQL CONFIGURATION
+PostgreSQL must be configured to accept connections
+with md5 password authentication.  To do so,
+edit /var/lib/pgsql/data/pg_hba.conf (or similar)
+to include "host all all 127.0.0.1/32 md5" _above_
+a similar line that allows 'ident' authentication.
+
+h)  mkdir -p /opt/cloudera/parcel-repo #创建Parcel库  
+cp /home/lenmom/cdh5/CDH-5.8.3-1.cdh5.8.3.p0.2-el6.parcel       /opt/cloudera/parcel-repo
+cp /home/lenmom/cdh5/CDH-5.8.3-1.cdh5.8.3.p0.2-el6.parcel.sha       /opt/cloudera/parcel-repo
+cp /home/lenmom/cdh5/manifest.json       /opt/cloudera/parcel-repo
+ Agent 节点Parcels     
+mkdir -p /opt/cloudera/parcels
+chown cloudera-scm:cloudera-scm   /opt/cloudera/parcels/      #Cluster状态下cloudera-scm用户安装状态，进行授权
+chown root:root   /opt/cloudera/parcels/    #local root用户安装状态，进行授权
+
+
+i) 本地yum源
+yum install yum-utils createrepo   #安装repo util
+mv /home/lenmom/cdh5/    /var/www/html     # /home/lenmom/cdh5/  contains parcels and rpms.
+createrepo /var/www/html/cdh5/rpms/             # /home/lenmom/cdh5/rpms  rpms.
+chmod -R ugo+rX /var/www/html  #授权
+
+vi /etc/yum.repos.d/cdh583.repo 写入如下内容
+[cdh583]
+name=repo
+baseurl=http://192.168.1.243/cdh5/rpms/
+enabled=true
+gpgcheck=false
+
+保存后，执行以下两条命令
+yum clean all    #清除yum缓存
+rm -Rf /var/cache/yum/x86_64
+yum update      #更新yum缓存
+yum makecache
+
+j） /opt/cloudera-manager/cm-5.8.3/etc/init.d/cloudera-scm-agent start   #启动agent
+    /opt/cloudera-manager/cm-5.8.3/etc/init.d/cloudera-scm-server start   #启动server
+查看端口占用：
+netstat -anp|grep 7180  #7180是cloudera-server host的端口号，查看某个端口是否被占用 
+lsof -i:7180  #7180是cloudera-server host的端口号，查看某个端口是否被占用 
+
+浏览器
+http://192.168.1.243:7180/    开始安装过程（等待服务器启动需要一段时间，耐心等待）
+
+/opt/cloudera-manager/cm-5.8.3/etc/cloudera-scm-agent/config.ini   server_host    server_port
+
+
+
+# yum -y install lrzsz
+现在就可以正常使用rz、sz命令上传、下载数据了
+
+ 
+
+配置SecureCRT的session选项的SFTP标签页和X/Y/Zmodem中的目录，就可以了
+
+ 
+
+rz是传到linux，sz是从linux下载到windows。

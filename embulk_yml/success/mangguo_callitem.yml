@@ -1,0 +1,40 @@
+in:
+  type: mongodb
+  hosts:
+  - {host: 10.68.100.54, port: 27017}
+  database: mangguo_webhook
+  collection: "webhook_data"
+  projection: '{"mangguo":1}'
+
+
+filters:
+  - type: expand_json_array
+    json_column_name: record
+    root: "$.mangguo.call_item"
+    expanded_column_name: call_item
+
+  - type: expand_json
+    json_column_name: call_item
+    expanded_columns:
+      - {name: record_fpath, type: string}
+      - {name: who, type: string}
+      - {name: text, type: string}
+      - {name: create_at, type: string}
+      - {name: user_info, type: string}
+      - {name: flow_info, type: string}
+
+
+  - type: expand_json
+    json_column_name: record
+    expanded_columns:
+      - {name: _id, type: string}  
+
+
+
+out:
+  type: parquet
+  path_prefix: hdfs://hdfscluster/datahub/stg.db/webhook_callitem/etl_date=2018-11-22/
+  sequence_format: '%03d'
+  config_files:
+   - /opt/spark-2.3.2-bin-hadoop2.7/conf/core-site.xml
+   - /opt/spark-2.3.2-bin-hadoop2.7/conf/hdfs-site.xml

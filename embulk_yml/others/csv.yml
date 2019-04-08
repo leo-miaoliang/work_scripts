@@ -1,0 +1,29 @@
+in:
+  type: file
+  path_prefix: /root/test/mac
+  parser:
+    type: csv
+    charset: UTF-8
+    newline: CRLF
+    delimiter: ","
+    quote: '"'
+    escape: '"'
+    null_string: 'NULL'
+    skip_header_lines: 0
+    columns:
+    - {name: mac, type: string}
+    - {name: mac_company, type: string}
+    - {name: mac_time, type: long}
+    - {name: mac_lat, type: double}
+    - {name: mac_lon, type: double}
+    - {name: geo_hash5, type: string}
+    - {name: geo_hash6, type: string}
+    - {name: geo_hash7, type: string}
+    - {name: geo_hash8, type: string}
+    - {name: geo_hash9, type: string}
+    - {name: geo_category, type: string}
+    - {name: client_id, type: string}
+
+
+out:
+  type: stdout

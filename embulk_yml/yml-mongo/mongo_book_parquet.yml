@@ -1,0 +1,22 @@
+in:
+  type: mongodb
+  hosts:
+  - {host: 10.68.100.54, port: 27017}
+  database: mangguo_webhook
+  collection: "webhook_data"
+  #query: '{dialogCount:0}'
+  projection: '{"mangguo":1,"insert_date":1,"insert_timestamp":1}'
+
+filters:
+  # convert json column into typed columns
+  - type: expand_json
+    json_column_name: record
+    expanded_columns:
+      - {name: _id, type: string}
+      - {name: mangguo.fs_ip, type: string}
+      - {name: mangguo.call.call_status, type: string}
+      - {name: insert_date, type: string}
+      - {name: insert_timestamp, type: long}
+
+out:
+  type: stdout

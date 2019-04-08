@@ -1,0 +1,31 @@
+in:
+  type: mongodb
+  hosts:
+  - {host: 10.68.100.54, port: 27017}
+  database: mangguo_webhook
+  collection: "webhook_data"
+  #query: '{dialogCount:0}'
+  projection: '{"mangguo":1,"insert_date":1,"insert_timestamp":1}'
+
+filters:
+  # convert json column into typed columns
+  - type: expand_json
+    json_column_name: record
+    expanded_columns:
+      - {name: _id, type: string}
+      - {name: mangguo, type: string}
+      - {name: mangguo.fs_ip, type: string}
+      - {name: insert_date, type: string}
+      - {name: insert_timestamp, type: long}
+
+  - type: rename
+    columns:
+       _id: id
+       mangguo.fs_ip: fs_ip
+out:
+  type: parquet
+  path_prefix: hdfs://hdfscluster/datahub/stg.db/test_json_rename/etl_date=2018-11-22/
+  sequence_format: '%03d'
+  config_files:
+   - /opt/spark-2.3.2-bin-hadoop2.7/conf/core-site.xml
+   - /opt/spark-2.3.2-bin-hadoop2.7/conf/hdfs-site.xml

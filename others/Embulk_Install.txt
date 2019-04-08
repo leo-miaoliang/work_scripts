@@ -1,0 +1,37 @@
+--Install Embulk Step
+
+curl --create-dirs -o /opt/embulk/bin/embulk -L "https://dl.embulk.org/embulk-latest.jar"
+chmod +x /opt/embulk/bin/embulk
+echo 'export PATH="/opt/embulk/bin/:$PATH"' >> /etc/profile.d/embulk.sh
+
+-- reboot
+为dw_adm赋权能访问文件夹目录/opt/embulk/
+chmod 755 /opt/embulk/bin/embulk
+
+su dw_adm
+
+-- 在dw_adm用户下也得安装插件,root下也安装
+-- install plugin
+embulk gem install embulk-input-mysql
+embulk gem install embulk-output-parquet
+embulk gem install embulk-input-mongodb
+embulk gem install embulk-filter-expand_json
+
+
+
+
+20190102
+
+embulk gem install embulk-filter-column
+embulk gem install embulk-parser-jsonl
+embulk gem install embulk-filter-expand_json_array
+
+未安装
+20190213
+embulk gem install embulk-input-presto
+
+20190218
+embulk gem install embulk-output-hdfs
+embulk gem install embulk-formatter-jsonl
+
+embulk gem install embulk-input-parquet_hadoop

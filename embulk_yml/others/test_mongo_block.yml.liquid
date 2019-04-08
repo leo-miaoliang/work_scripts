@@ -1,0 +1,25 @@
+in:
+  type: file
+  path_prefix: /opt/embulk/test/data.csv
+  parser:
+    type: csv
+    charset: UTF-8
+    newline: CRLF
+    null_string: 'NULL'
+    skip_header_lines: 1
+    comment_line_marker: '#'
+    columns:
+      - {name: time,  type: timestamp, format: "%Y-%m-%d"}
+      - {name: id, type: long}
+      - {name: name, type: string}
+      - {name: score, type: double}
+filters: 
+  - type: {{ env.mongo_filter }}
+    column:
+      {{ env.mongo_name }}
+      type: string
+    skip_if_null: [id]
+
+
+out:
+  type: stdout

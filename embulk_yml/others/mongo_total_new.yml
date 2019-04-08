@@ -1,0 +1,103 @@
+in:
+  type: mongodb
+  hosts:
+  - {host: 10.68.100.54, port: 27017}
+  database: mangguo_webhook
+  collection: "webhook_data"
+  projection: '{"mangguo":1,"insert_date":1,"insert_timestamp":1}'
+
+filters:
+  - type: expand_json
+    json_column_name: record
+    expanded_columns:
+      - {name: _id, type: string}
+      - {name: mangguo.fs_ip, type: string}
+      - {name: mangguo.call.channal_detail, type: string}
+      - {name: mangguo.call.similarity,  type: string}
+      - {name: mangguo.call.user,  type: string}
+      - {name: mangguo.call.synth_content,  type: string}
+      - {name: mangguo.call.is_read,  type: string}
+      - {name: mangguo.call.hd_ct,  type: long}
+      - {name: mangguo.call.is_delete,  type: string}
+      - {name: mangguo.call.finish_at,  type: string}
+      - {name: mangguo.call.answer_at,  type: string}
+      - {name: mangguo.call.label,  type: string}
+      - {name: mangguo.call.id,  type: string}
+      - {name: mangguo.call.callback_at,  type: string}
+      - {name: mangguo.call.call_type,  type: string}
+      - {name: mangguo.call.cust_name,  type: string}
+      - {name: mangguo.call.call_at,  type: string}
+      - {name: mangguo.call.host,  type: string}
+      - {name: mangguo.call.queue_at,  type: string}
+      - {name: mangguo.call.channal_status,  type: string} 
+      - {name: mangguo.call.info,  type: string}
+      - {name: mangguo.call.cust_number,  type: long}
+      - {name: mangguo.call.number,  type: long}
+      - {name: mangguo.call.cust_tag,  type: string} 
+      - {name: mangguo.call.call_status,  type: string}
+      - {name: mangguo.call.full_record_fpath,  type: string}
+      - {name: mangguo.call.voice_type, type: string} 
+      - {name: mangguo.call.call_times,  type: long}
+      - {name: mangguo.call.talk_time,  type: long}
+      - {name: mangguo.call.is_interrupt,  type: string}
+      - {name: mangguo.call.task,  type: string}
+      - {name: mangguo.call.tenant_id,  type: string}
+      - {name: mangguo.call.flow_id,  type: string}
+      - {name: mangguo.call.update_tag_ct,  type: long}
+      - {name: mangguo.call.user_id,  type: string}
+      - {name: mangguo.call.memo,  type: string}
+      - {name: mangguo.call.call_minute,  type: long}
+      - {name: mangguo.more.flow_name, type: string}
+      - {name: mangguo.more.flow_comment, type: string}
+      - {name: mangguo.more.task_name, type: string}
+      - {name: insert_date, type: string} 
+      - {name: insert_timestamp, type: long}
+           
+  - type: rename
+    columns:
+       mangguo.fs_ip: fs_ip    
+       mangguo.call.channal_detail:   channal_detail    
+       mangguo.call.similarity:       similarity        
+       mangguo.call.user:             user              
+       mangguo.call.synth_content:    synth_content     
+       mangguo.call.is_read:          is_read           
+       mangguo.call.hd_ct:            hd_ct             
+       mangguo.call.is_delete:        is_delete         
+       mangguo.call.finish_at:        finish_at         
+       mangguo.call.answer_at:        answer_at         
+       mangguo.call.label:            label             
+       mangguo.call.id:          call_id           
+       mangguo.call.callback_at:      callback_at       
+       mangguo.call.call_type:        call_type         
+       mangguo.call.cust_name:        cust_name         
+       mangguo.call.call_at:          call_at           
+       mangguo.call.host:             host              
+       mangguo.call.queue_at:         queue_at          
+       mangguo.call.channal_status:   channal_status    
+       mangguo.call.info:             info              
+       mangguo.call.cust_number:      cust_number       
+       mangguo.call.number:           number            
+       mangguo.call.cust_tag:         cust_tag          
+       mangguo.call.call_status:      call_status       
+       mangguo.call.full_record_fpath: full_record_fpath 
+       mangguo.call.voice_type:       voice_type        
+       mangguo.call.call_times:       call_times        
+       mangguo.call.talk_time:        talk_time         
+       mangguo.call.is_interrupt:     is_interrupt      
+       mangguo.call.task:             task              
+       mangguo.call.tenant_id:        tenant_id         
+       mangguo.call.flow_id:          flow_id           
+       mangguo.call.update_tag_ct:    update_tag_ct     
+       mangguo.call.user_id:          user_id           
+       mangguo.call.memo:             memo              
+       mangguo.call.call_minute:      call_minute   
+       mangguo.more.flow_name: flow_name    
+       mangguo.more.flow_comment: flow_comment
+       mangguo.more.task_name: task_name
+out:
+  type: parquet
+  path_prefix: hdfs://hdfscluster/datahub/stg.db/mangguo_webhook_data/etl_date=2018-11-22/
+  sequence_format: '%03d'
+  config_files:
+   - /opt/spark-2.3.2-bin-hadoop2.7/conf/core-site.xml
+   - /opt/spark-2.3.2-bin-hadoop2.7/conf/hdfs-site.xml

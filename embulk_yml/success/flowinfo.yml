@@ -1,0 +1,62 @@
+in:
+  type: mongodb
+  hosts:
+  - {host: 10.68.100.54, port: 27017}
+  database: mangguo_webhook
+  collection: "webhook_data"
+  projection: '{"mangguo":1}'
+  query: '{"_id": 81}'
+
+filters:
+  - type: expand_json_array
+    json_column_name: record
+    root: "$.mangguo.call_item"
+    expanded_column_name: call_item
+
+  - type: expand_json
+    json_column_name: call_item
+    expanded_columns:
+      - {name: flow_info, type: string}
+      - {name: record_fpath, type: string}
+   
+  - type: expand_json_array
+    json_column_name: flow_info
+    root: "$."
+    expanded_column_name: flow_info_1
+
+
+  - type: expand_json
+    json_column_name: flow_info_1
+    expanded_columns:
+      - {name: similarity, type: string}
+      - {name: node_content, type: string}
+      - {name: is_flow_output, type: string}
+
+
+
+  - type: expand_json
+    json_column_name: record
+    expanded_columns:
+      - {name: _id, type: string}
+ 
+
+
+
+
+out:
+  type: stdout
+
+#  type: file
+#  path_prefix: /opt/embulk/test/csv_
+#  file_ext: csv
+#  formatter:
+#    type: csv
+#    delimiter: "\t"
+#    newline: CRLF
+#    newline_in_field: LF
+#    charset: UTF-8
+#    quote_policy: MINIMAL
+#    quote: '"'
+#    escape: "\\"
+#    null_string: "\\N"
+#    default_timezone: 'UTC'

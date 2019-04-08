@@ -1,0 +1,33 @@
+in:
+  type: file
+  path_prefix: /opt/airflow/workspaces/mac_csv/2018-12-28/mac2018-12-28
+  parser:
+    type: csv
+    charset: UTF-8
+    newline: CRLF
+    delimiter: ","
+    quote: '"'
+    escape: '"'
+    null_string: 'NULL'
+    skip_header_lines: 0
+    columns:
+    - {name: mac, type: string}
+    - {name: mac_company, type: string}
+    - {name: mac_time, type: long}
+    - {name: mac_lat, type: double}
+    - {name: mac_lon, type: double}
+    - {name: geo_hash5, type: string}
+    - {name: geo_hash6, type: string}
+    - {name: geo_hash7, type: string}
+    - {name: geo_hash8, type: string}
+    - {name: geo_hash9, type: string}
+    - {name: geo_category, type: string}
+    - {name: client_id, type: string}
+
+filters:
+  - type: column
+    add_columns:
+      - {name: etl_date,type: string,default: '2018-12-28' }
+
+out:
+  type: stdout

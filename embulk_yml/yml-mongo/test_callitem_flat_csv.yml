@@ -1,0 +1,49 @@
+in:
+  type: mongodb
+  hosts:
+  - {host: 10.68.100.54, port: 27017}
+  database: mangguo_webhook
+  collection: "webhook_data"
+  projection: '{"mangguo":1}'
+  query: '{"_id": 81}'
+
+filters:
+  - type: expand_json
+    json_column_name: record
+    expanded_columns:
+      - {name: _id, type: string}
+      - {name: mangguo.call_item, type: string}
+
+  - type: flatten_json
+    json_columns:
+      - mangguo.call_item
+    separator: ""
+    array_index_prefix: "_"
+
+
+
+
+out:
+  type: file
+  path_prefix: /opt/embulk/test/csv_
+  file_ext: csv
+  formatter:
+    type: csv
+    delimiter: "\t"
+    newline: CRLF
+    newline_in_field: LF
+    charset: UTF-8
+    quote_policy: MINIMAL
+    quote: '"'
+    escape: "\\"
+    null_string: "\\N"
+    default_timezone: 'UTC'
+
+
+#out:
+#  type: parquet
+#  path_prefix: hdfs://hdfscluster/datahub/stg.db/test_callitem1/etl_date=2018-11-22/
+#  sequence_format: '%03d'
+#  config_files:
+#   - /opt/spark-2.3.2-bin-hadoop2.7/conf/core-site.xml
+#   - /opt/spark-2.3.2-bin-hadoop2.7/conf/hdfs-site.xml

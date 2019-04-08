@@ -1,0 +1,44 @@
+in:
+  type: {{ env.source_type }}
+  host: {{ env.source_host }}
+  user: {{ env.source_user }}
+  password: {{ env.source_pwd }}
+  database: {{ env.source_db }}
+  use_legacy_datetime_code: true
+  default_timezone: Asia/Shanghai 
+  query: |
+    {{ env.source_query }}
+
+
+
+
+out:
+  type: {{ env.hdfs_type }}
+  config_files:
+  - {{ env.hdfs_coresite }}
+  - {{ env.hdfs_site }}
+  config:
+    fs.defaultFS: {{ env.hdfs_defaultfs }}
+    fs.hdfs.impl: org.apache.hadoop.hdfs.DistributedFileSystem
+    fs.file.impl: org.apache.hadoop.fs.LocalFileSystem
+  path_prefix:  {{ env.hdfs_path }}
+  file_ext: txt
+  overwrite: true
+
+#  encoders:
+#    - type: gzip
+#      level: 6
+
+  formatter:
+    type: csv
+    delimiter: "\u0007"
+    header_line: false
+    newline: CRLF
+    newline_in_field: LF
+    charset: UTF-8
+    quote_policy: MINIMAL
+    quote: '"'
+    escape: "\\"
+    null_string: "\\N"
+    default_timezone: Asia/Shanghai
+
